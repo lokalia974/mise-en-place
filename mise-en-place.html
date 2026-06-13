@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mise en Place</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0F172A;color:#F8FAFC;min-height:100vh;font-size:15px}
+  button{font-family:inherit;cursor:pointer;font-size:13px;border:none;border-radius:8px;padding:7px 12px;transition:opacity .15s}
+  button:hover{opacity:.85}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  input{font-family:inherit;font-size:14px;background:#0F172A;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#F8FAFC;width:100%;outline:none}
+  input:focus{border-color:#64748B}
+  input::placeholder{color:#475569}
+  pre{white-space:pre-wrap}
+
+  /* CONFIG */
+  #config-screen{max-width:520px;margin:0 auto;padding:32px 16px}
+  #config-screen h1{font-size:24px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  #config-screen p.sub{color:#94A3B8;margin-bottom:28px;font-size:14px}
+  .card{background:#1E293B;border-radius:14px;padding:18px 22px;margin-bottom:14px}
+  .card-title{font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .btn-small{background:#334155;color:#94A3B8;padding:5px 10px}
+  .btn-primary{background:#3B82F6;color:#fff;padding:11px;font-size:15px;font-weight:600;width:100%;border-radius:8px}
+  .sql-block{background:#0F172A;border-radius:8px;padding:12px;font-size:11.5px;font-family:'Courier New',monospace;color:#7DD3FC;overflow-x:auto;margin-top:8px;line-height:1.6}
+  .error{color:#F87171;font-size:13px;margin-bottom:10px}
+  .hint{font-size:12px;color:#475569;text-align:center;margin-top:6px}
+  label{display:block;font-size:13px;color:#94A3B8;margin-bottom:5px;margin-top:10px}
+  label:first-of-type{margin-top:0}
+
+  /* MAIN APP */
+  #app{display:none;flex-direction:column;height:100vh}
+  #app.active{display:flex}
+  header{background:#1E293B;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1E293B;flex-shrink:0}
+  header h1{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+  header .header-btns{display:flex;gap:6px}
+  header .header-btns button{background:#334155;color:#94A3B8}
+
+  /* TABS */
+  #tabs{display:flex;gap:5px;padding:10px 14px;overflow-x:auto;background:#1E293B;border-bottom:1px solid #1E293B;flex-shrink:0;-webkit-overflow-scrolling:touch}
+  #tabs::-webkit-scrollbar{height:4px}
+  #tabs::-webkit-scrollbar-track{background:#0F172A}
+  #tabs::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+  .tab{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;font-size:13px;font-weight:500;border:none;transition:all .15s}
+  .tab.inactive{background:#334155;color:#94A3B8}
+  .tab .badge{border-radius:999px;padding:1px 7px;font-size:11px;font-weight:700}
+
+  /* KANBAN */
+  #kanban{display:flex;gap:10px;padding:12px 14px;overflow-x:auto;flex:1;align-items:flex-start;-webkit-overflow-scrolling:touch}
+  #kanban::-webkit-scrollbar{height:4px}
+  #kanban::-webkit-scrollbar-track{background:#0F172A}
+  #kanban::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+  .col{flex:1;min-width:185px;display:flex;flex-direction:column;gap:8px}
+  .col-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;border-radius:10px;border-top:3px solid transparent}
+  .col-header span:first-child{font-weight:700;font-size:13px}
+  .col-header .count{background:#0F172A;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;color:#94A3B8}
+  .col-body{display:flex;flex-direction:column;gap:8px}
+
+  /* TASK CARD */
+  .task-card{background:#1E293B;border-radius:10px;padding:11px 14px;border-left:3px solid transparent;cursor:pointer;transition:background .1s}
+  .task-card:hover{background:#243147}
+  .task-card .task-name{font-weight:600;font-size:14px;line-height:1.4}
+  .task-card .task-qty{font-size:12px;color:#94A3B8;margin-top:4px}
+  .task-actions{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+  .task-actions button{font-size:12px;padding:4px 9px;font-weight:600}
+  .btn-todo{background:#33333355;color:#94A3B8;border:1px solid #44444455}
+  .btn-progress{background:#F59E0B22;color:#F59E0B;border:1px solid #F59E0B44}
+  .btn-done{background:#10B98122;color:#10B981;border:1px solid #10B98144}
+  .btn-edit{background:#3B82F622;color:#3B82F6;border:1px solid #3B82F644}
+  .btn-del{background:#EF444422;color:#EF4444;border:1px solid #EF444444}
+
+  .empty-col{border:1px dashed #334155;border-radius:8px;padding:16px;text-align:center;color:#475569;font-size:13px}
+  .add-btn{background:transparent;border:2px dashed transparent;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;width:100%;text-align:center}
+
+  /* MODAL */
+  #modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;padding:16px}
+  #modal-overlay.active{display:flex}
+  .modal{background:#1E293B;border-radius:16px;padding:22px 24px;width:100%;max-width:420px;border-top:3px solid transparent}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .modal-header h2{font-size:16px;font-weight:700}
+  .modal-header button{background:none;color:#94A3B8;font-size:20px;padding:0 2px}
+  .modal-btns{display:flex;gap:8px;margin-top:16px}
+  .modal-btns button{flex:1;padding:11px;font-size:14px;font-weight:600;border-radius:8px}
+  .btn-cancel{background:#334155;color:#94A3B8}
+  .btn-confirm{color:#0F172A}
+</style>
+</head>
+<body>
+
+<!-- CONFIG SCREEN -->
+<div id="config-screen">
+  <h1>👨‍🍳 Mise en Place</h1>
+  <p class="sub">App collaborative cuisine — configuration Supabase</p>
+
+  <div class="card">
+    <div class="card-title">
+      1. Créer la table Supabase
+      <div style="display:flex;gap:6px">
+        <button class="btn-small" onclick="toggleSQL()">Voir SQL</button>
+        <button class="btn-small" onclick="copySQL()">📋 Copier</button>
+      </div>
+    </div>
+    <div id="sql-block" style="display:none">
+      <pre class="sql-block" id="sql-text">create table if not exists mise_en_place (
+  id uuid default gen_random_uuid() primary key,
+  section text not null,
+  task_name text not null,
+  status text not null default 'todo',
+  target_qty int not null default 0,
+  done_qty int not null default 0,
+  created_at timestamptz default now()
+);
+alter table mise_en_place enable row level security;
+create policy "public_all" on mise_en_place
+  for all to anon using (true) with check (true);</pre>
+    </div>
+    <p style="font-size:13px;color:#64748B;margin-top:8px">Supabase → SQL Editor → coller et exécuter</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">2. Connecter le projet</div>
+    <label>Project URL</label>
+    <input id="inp-url" placeholder="https://xxx.supabase.co" />
+    <label>Clé anon publique</label>
+    <input id="inp-key" placeholder="eyJhbGciOiJ..." />
+    <div id="conn-err" class="error" style="display:none;margin-top:10px"></div>
+    <div style="margin-top:12px">
+      <button class="btn-primary" id="btn-connect" onclick="connect()">Se connecter</button>
+    </div>
+  </div>
+  <p class="hint">Supabase → Settings → API → Project URL + anon key</p>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <h1>👨‍🍳 Mise en Place</h1>
+    <div class="header-btns">
+      <button onclick="openModal('reset')">🔄 Reset</button>
+      <button onclick="disconnect()">⚙️</button>
+    </div>
+  </header>
+  <div id="tabs"></div>
+  <div id="kanban"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  {id:'froid',    l:'Froid',     e:'🧊', c:'#1D9E75', t:'#04342C'},
+  {id:'chaud',    l:'Chaud',     e:'🔥', c:'#D85A30', t:'#4A1B0C'},
+  {id:'entrees',  l:'Entrées',   e:'🥗', c:'#639922', t:'#173404'},
+  {id:'plats',    l:'Plats',     e:'🍽️', c:'#BA7517', t:'#412402'},
+  {id:'desserts', l:'Desserts',  e:'🍰', c:'#D4537E', t:'#4B1528'},
+  {id:'accomp',   l:'Accomp.',   e:'🥦', c:'#378ADD', t:'#042C53'},
+  {id:'bar',      l:'Bar',       e:'🍹', c:'#7F77DD', t:'#26215C'},
+];
+const COLS = [
+  {id:'todo',        l:'À Faire',  a:'#6B7280'},
+  {id:'in_progress', l:'En Cours', a:'#F59E0B'},
+  {id:'done',        l:'Terminé ✅',a:'#10B981'},
+];
+
+let cfg = null;
+let tasks = [];
+let curSec = 'froid';
+let pollTimer = null;
+let expandedId = null;
+let currentModal = null;
+
+const SQL_TEXT = document.getElementById('sql-text').textContent;
+
+// ── INIT ──────────────────────────────────────────────
+window.onload = () => {
+  const saved = localStorage.getItem('mep_cfg');
+  if (saved) { cfg = JSON.parse(saved); showApp(); }
+};
+
+// ── CONFIG ────────────────────────────────────────────
+function toggleSQL() {
+  const el = document.getElementById('sql-block');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function copySQL() {
+  navigator.clipboard.writeText(SQL_TEXT.trim()).then(() => {
+    showToast('SQL copié !');
+  });
+}
+async function connect() {
+  const url = document.getElementById('inp-url').value.trim();
+  const key = document.getElementById('inp-key').value.trim();
+  const errEl = document.getElementById('conn-err');
+  const btn = document.getElementById('btn-connect');
+  if (!url || !key) { showError(errEl, 'Remplir les deux champs.'); return; }
+  btn.disabled = true; btn.textContent = 'Connexion...';
+  try {
+    const r = await fetch(`${url}/rest/v1/mise_en_place?limit=1`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` }
+    });
+    if (!r.ok) {
+      const txt = await r.text();
+      const msg = txt.toLowerCase().includes('exist')
+        ? 'Table introuvable — exécuter le SQL d\'abord.'
+        : 'Erreur de connexion. Vérifier l\'URL et la clé anon.';
+      showError(errEl, msg); btn.disabled = false; btn.textContent = 'Se connecter'; return;
+    }
+    cfg = { url, key };
+    localStorage.setItem('mep_cfg', JSON.stringify(cfg));
+    errEl.style.display = 'none';
+    showApp();
+  } catch {
+    showError(errEl, 'Impossible de se connecter à Supabase.');
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+}
+function disconnect() {
+  clearInterval(pollTimer);
+  cfg = null; localStorage.removeItem('mep_cfg');
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('config-screen').style.display = 'block';
+  document.getElementById('btn-connect').disabled = false;
+  document.getElementById('btn-connect').textContent = 'Se connecter';
+}
+function showError(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+// ── APP ───────────────────────────────────────────────
+function showApp() {
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  renderTabs();
+  loadTasks();
+  clearInterval(pollTimer);
+  pollTimer = setInterval(loadTasks, 6000);
+}
+
+async function api(path, opts = {}) {
+  return fetch(`${cfg.url}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      apikey: cfg.key,
+      Authorization: `Bearer ${cfg.key}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+      ...(opts.headers || {})
+    }
+  });
+}
+
+async function loadTasks() {
+  try {
+    const r = await api('mise_en_place?order=created_at.asc');
+    if (r.ok) { tasks = await r.json(); renderAll(); }
+  } catch {}
+}
+
+function pending(secId) {
+  return tasks.filter(t => t.section === secId && t.status !== 'done').length;
+}
+
+// ── RENDER ────────────────────────────────────────────
+function renderAll() { renderTabs(); renderKanban(); }
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = SECTIONS.map(s => {
+    const active = s.id === curSec;
+    const cnt = pending(s.id);
+    const badgeBg = active ? 'rgba(255,255,255,0.25)' : '#0F172A';
+    const badgeColor = active ? s.t : '#94A3B8';
+    return `
+      <button class="tab ${active ? '' : 'inactive'}"
+        style="${active ? `background:${s.c};color:${s.t};` : ''}"
+        onclick="switchSec('${s.id}')">
+        ${s.e} ${s.l}
+        ${cnt > 0 ? `<span class="badge" style="background:${badgeBg};color:${badgeColor}">${cnt}</span>` : ''}
+      </button>`;
+  }).join('');
+}
+
+function renderKanban() {
+  const sec = SECTIONS.find(s => s.id === curSec);
+  const kanban = document.getElementById('kanban');
+  const secTasks = tasks.filter(t => t.section === curSec);
+  kanban.innerHTML = COLS.map(col => {
+    const colTasks = secTasks.filter(t => t.status === col.id);
+    const cards = colTasks.length > 0
+      ? colTasks.map(t => renderCard(t, col.id, sec.c)).join('')
+      : `<div class="empty-col">Vide</div>`;
+    const addBtn = col.id === 'todo'
+      ? `<button class="add-btn" style="border-color:${sec.c};color:${sec.c}" onclick="openModal('add')">+ Ajouter</button>`
+      : '';
+    return `
+      <div class="col">
+        <div class="col-header" style="border-top-color:${col.a}">
+          <span style="color:${col.a}">${col.l}</span>
+          <span class="count">${colTasks.length}</span>
+        </div>
+        <div class="col-body">${cards}</div>
+        ${addBtn}
+      </div>`;
+  }).join('');
+}
+
+function renderCard(t, colId, secColor) {
+  const isExpanded = expandedId === t.id;
+  let qtyHtml = '';
+  if (t.target_qty > 0) {
+    qtyHtml = t.status === 'done'
+      ? `<div class="task-qty">✅ ${t.done_qty}/${t.target_qty}</div>`
+      : `<div class="task-qty">🎯 ${t.target_qty} à préparer</div>`;
+  }
+  let actionsHtml = '';
+  if (isExpanded) {
+    let btns = '';
+    if (colId !== 'todo')        btns += `<button class="btn-todo" onclick="moveTask('${t.id}','todo',event)">◀ À Faire</button>`;
+    if (colId !== 'in_progress') btns += `<button class="btn-progress" onclick="moveTask('${t.id}','in_progress',event)">${colId==='todo'?'▶':' ◀'} En Cours</button>`;
+    if (colId !== 'done')        btns += `<button class="btn-done" onclick="moveTask('${t.id}','done',event)">✅ Terminé</button>`;
+    btns += `<button class="btn-edit" onclick="openEditModal('${t.id}',event)">✏️</button>`;
+    btns += `<button class="btn-del" onclick="deleteTask('${t.id}',event)">🗑</button>`;
+    actionsHtml = `<div class="task-actions">${btns}</div>`;
+  }
+  return `
+    <div class="task-card" style="border-left-color:${secColor}" onclick="toggleExpand('${t.id}')">
+      <div class="task-name">${escHtml(t.task_name)}</div>
+      ${qtyHtml}
+      ${actionsHtml}
+    </div>`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INTERACTIONS ──────────────────────────────────────
+function switchSec(id) { curSec = id; expandedId = null; renderAll(); }
+
+function toggleExpand(id) {
+  expandedId = expandedId === id ? null : id;
+  renderKanban();
+}
+
+async function moveTask(id, status, e) {
+  e.stopPropagation();
+  if (status === 'done') {
+    const t = tasks.find(t => t.id === id);
+    openModal('done', t); return;
+  }
+  await api(`mise_en_place?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+  expandedId = null;
+  loadTasks();
+}
+
+async function deleteTask(id, e) {
+  e.stopPropagation();
+  await api(`mise_en_place?id=eq.${id}`, { method: 'DELETE' });
+  expandedId = null;
+  loadTasks();
+}
+
+// ── MODALS ────────────────────────────────────────────
+function openModal(type, data = null) {
+  currentModal = { type, data };
+  const sec = SECTIONS.find(s => s.id === curSec);
+  const overlay = document.getElementById('modal-overlay');
+  const box = document.getElementById('modal-box');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  overlay.classList.add('active');
+
+  if (type === 'add') {
+    box.style.borderTopColor = sec.c;
+    title.textContent = `Nouvelle tâche — ${sec.e} ${sec.l}`;
+    body.innerHTML = `
+      <label>Nom de la tâche</label>
+      <input id="m-name" placeholder="ex: Couper les tomates" autofocus />
+      <label style="margin-top:10px">Quantité cible (optionnel)</label>
+      <input id="m-qty" type="number" placeholder="ex: 20 portions" />
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+        <button class="btn-confirm" style="background:${sec.c};color:${sec.t}" onclick="submitAdd()">Ajouter</button>
+      </div>`;
+    document.getElementById('m-name').addEventListener('keydown', e => { if(e.key==='Enter') submitAdd(); });
+
+  } else if (type === 'edit') {
+    const t = data;
+    box.style.borderTopColor = sec.c;
+    title.textContent = 'Modifier la tâche';
+    body.innerHTML = `
+      <label>Nom de la tâche</label>
+      <input id="m-name" value="${escHtml(t.task_name)}" autofocus />
+      <label style="margin-top:10px">Quantité cible</label>
+      <input id="m-qty" type="number" value="${t.target_qty || ''}" placeholder="0" />
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+        <button class="btn-confirm" style="background:${sec.c};color:${sec.t}" onclick="submitEdit('${t.id}')">Enregistrer</button>
+      </div>`;
+
+  } else if (type === 'done') {
+    const t = data;
+    box.style.borderTopColor = '#10B981';
+    title.textContent = 'Marquer comme terminé ✅';
+    const qtySection = t.target_qty > 0 ? `
+      <label>Quantité réalisée (cible : ${t.target_qty})</label>
+      <input id="m-doneqty" type="number" value="${t.target_qty}" />` : '';
+    body.innerHTML = `
+      <p style="font-weight:600;margin-bottom:14px">${escHtml(t.task_name)}</p>
+      ${qtySection}
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+        <button class="btn-confirm" style="background:#10B981;color:#04342C" onclick="submitDone('${t.id}',${t.target_qty})">Confirmer</button>
+      </div>`;
+
+  } else if (type === 'reset') {
+    box.style.borderTopColor = '#F59E0B';
+    title.textContent = 'Reset journée 🔄';
+    body.innerHTML = `
+      <p style="color:#94A3B8;font-size:14px;margin-bottom:18px">Remettre toutes les tâches à "À Faire" pour une nouvelle journée ?</p>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+        <button class="btn-confirm" style="background:#F59E0B;color:#412402" onclick="submitReset()">Confirmer le reset</button>
+      </div>`;
+  }
+
+  setTimeout(() => {
+    const inp = document.getElementById('m-name') || document.getElementById('m-doneqty');
+    if (inp) inp.focus();
+  }, 50);
+}
+
+function openEditModal(id, e) {
+  e.stopPropagation();
+  const t = tasks.find(t => t.id === id);
+  if (t) openModal('edit', t);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+  currentModal = null;
+}
+
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+async function submitAdd() {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) return;
+  const qty = parseInt(document.getElementById('m-qty').value) || 0;
+  await api('mise_en_place', {
+    method: 'POST',
+    body: JSON.stringify({ section: curSec, task_name: name, status: 'todo', target_qty: qty, done_qty: 0 })
+  });
+  closeModal(); expandedId = null; loadTasks();
+}
+
+async function submitEdit(id) {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) return;
+  const qty = parseInt(document.getElementById('m-qty').value) || 0;
+  await api(`mise_en_place?id=eq.${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ task_name: name, target_qty: qty })
+  });
+  closeModal(); expandedId = null; loadTasks();
+}
+
+async function submitDone(id, targetQty) {
+  const doneQtyEl = document.getElementById('m-doneqty');
+  const doneQty = doneQtyEl ? parseInt(doneQtyEl.value) || 0 : 0;
+  await api(`mise_en_place?id=eq.${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'done', done_qty: doneQty })
+  });
+  closeModal(); expandedId = null; loadTasks();
+}
+
+async function submitReset() {
+  await api('mise_en_place', {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'todo', done_qty: 0 })
+  });
+  closeModal(); loadTasks();
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#F8FAFC;padding:10px 20px;border-radius:99px;font-size:14px;font-weight:600;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+</script>
+</body>
+</html>
