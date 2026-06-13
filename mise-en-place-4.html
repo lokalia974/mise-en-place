@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mise en Place</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0F172A;color:#F8FAFC;min-height:100vh;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer;transition:opacity .1s}
+button:active{opacity:.65}
+input,select{font-family:inherit;font-size:14px;background:#1E293B;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#F8FAFC;width:100%;outline:none}
+input:focus,select:focus{border-color:#64748B}
+input::placeholder{color:#475569}
+
+/* CONFIG */
+#config-screen{max-width:500px;margin:0 auto;padding:28px 16px}
+.cfg-logo{font-size:40px;text-align:center;margin-bottom:6px}
+.cfg-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:4px}
+.cfg-sub{color:#94A3B8;font-size:14px;text-align:center;margin-bottom:24px}
+.card{background:#1E293B;border-radius:14px;padding:18px 20px;margin-bottom:12px}
+.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.card-top span{font-weight:700;font-size:14px}
+.btn-xs{background:#334155;color:#94A3B8;border:none;border-radius:6px;padding:5px 10px;font-size:12px}
+.sql-pre{background:#0F172A;border-radius:8px;padding:12px;font-size:11px;font-family:'Courier New',monospace;color:#7DD3FC;overflow-x:auto;margin-top:8px;line-height:1.7;white-space:pre}
+.lbl{display:block;font-size:13px;color:#94A3B8;margin:12px 0 5px}
+.lbl:first-of-type{margin-top:0}
+.btn-primary{background:#3B82F6;color:#fff;border:none;padding:12px;font-size:15px;font-weight:800;width:100%;border-radius:10px;margin-top:12px}
+.cfg-err{color:#F87171;font-size:13px;margin-top:8px}
+.cfg-hint{font-size:12px;color:#475569;text-align:center;margin-top:8px}
+
+/* APP */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.active{display:flex}
+header{background:#1E293B;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+header h1{font-size:15px;font-weight:800}
+.hbtns{display:flex;gap:5px}
+.hbtn{background:#334155;color:#94A3B8;border:none;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600}
+.hbtn.on{background:#7F77DD;color:#F8FAFC}
+#main{flex:1;overflow-y:auto;padding-bottom:80px}
+
+/* SECTION HEADER */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px;position:sticky;top:0;background:#0F172A;z-index:10}
+.sec-hdr h2{font-size:17px;font-weight:800;display:flex;align-items:center;gap:7px}
+.sec-badge{font-size:12px;background:#1E293B;color:#94A3B8;border-radius:99px;padding:3px 10px;font-weight:600}
+.btn-add-sec{background:none;border:none;color:#64748B;font-size:24px;line-height:1;padding:0 4px}
+
+/* SOUS-SECTION LABEL */
+.ss-lbl{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#475569;padding:10px 16px 6px;background:#0F172A}
+
+/* ITEM ROW (cuisine) */
+.item-row{display:flex;align-items:center;padding:11px 16px;background:#111827;border-top:1px solid #1E293B}
+.item-info{flex:1;min-width:0}
+.item-nom{font-size:14px;font-weight:600;line-height:1.35}
+.item-sub-txt{font-size:11px;color:#EF4444;margin-top:2px}
+.ctrl{display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:10px}
+.btn-m,.btn-p{width:38px;height:38px;border:none;border-radius:9px;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.btn-m{background:#1E3A5F;color:#60A5FA}
+.btn-p{background:#14532D;color:#4ADE80}
+.qty{min-width:40px;text-align:center;font-size:20px;font-weight:800}
+.qty.zero{color:#475569}
+.btn-rupt,.btn-del{background:none;border:none;padding:4px 6px;flex-shrink:0;font-size:15px}
+.btn-del{color:#334155;font-size:13px}
+
+/* SERVICE VIEW */
+.srv-sec-title{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:16px 14px 10px;border-bottom:1px solid #1E293B;margin-bottom:10px}
+.srv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 4px}
+.srv-card{background:#1E293B;border-radius:12px;padding:14px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;min-height:90px;justify-content:center}
+.srv-card.dispo{border:1.5px solid #22C55E44}
+.srv-card.peu{border:1.5px solid #F59E0B44}
+.srv-card.out{opacity:.3;border:1.5px solid #33415544}
+.srv-name{font-size:12px;font-weight:600;text-align:center;line-height:1.35;color:#CBD5E1}
+.srv-qty{font-size:34px;font-weight:900;line-height:1}
+.srv-qty.green{color:#22C55E}
+.srv-qty.amber{color:#F59E0B}
+.srv-qty.gray{color:#475569}
+.srv-status{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.srv-status.green{color:#22C55E}
+.srv-status.amber{color:#F59E0B}
+.srv-status.gray{color:#475569}
+.srv-minus{position:absolute;bottom:7px;right:7px;width:28px;height:28px;background:#1E3A5F;color:#60A5FA;border:none;border-radius:7px;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+/* MEP VIEW */
+.mep-sec-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px;position:sticky;top:0;background:#0F172A;z-index:10}
+.mep-sec-hdr h2{font-size:17px;font-weight:800;display:flex;align-items:center;gap:7px}
+.mep-ss-lbl{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#475569;padding:10px 16px 4px;background:#0F172A}
+.plat-block{background:#111827;border-top:1px solid #1E293B;margin-bottom:0}
+.plat-hdr{display:flex;justify-content:space-between;align-items:center;padding:11px 16px 8px;cursor:pointer}
+.plat-hdr-left{display:flex;align-items:center;gap:8px;flex:1}
+.plat-hdr-name{font-size:13px;font-weight:700;color:#CBD5E1}
+.plat-progress{font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px}
+.plat-done{background:#14532D22;color:#4ADE80}
+.plat-partial{background:#F59E0B22;color:#F59E0B}
+.plat-todo{background:#334155;color:#64748B}
+.composant-list{padding:0 16px 10px}
+.composant-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#1E293B;border-radius:9px;margin-bottom:6px;cursor:pointer}
+.composant-row.fait{opacity:.5}
+.comp-check{width:22px;height:22px;border-radius:6px;border:2px solid #334155;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;transition:all .15s}
+.comp-check.on{background:#22C55E;border-color:#22C55E;color:#052e16}
+.comp-name{font-size:13px;font-weight:700;letter-spacing:.3px;color:#94A3B8;text-transform:uppercase}
+.comp-name.fait{text-decoration:line-through;color:#475569}
+
+/* FAB */
+#fab{position:fixed;bottom:20px;right:18px;width:52px;height:52px;border-radius:50%;border:none;font-size:28px;font-weight:800;color:#0F172A;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:40;display:flex;align-items:center;justify-content:center}
+
+/* MODAL */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:16px}
+#overlay.on{display:flex}
+.modal{background:#1E293B;border-radius:16px;padding:22px 20px;width:100%;max-width:380px}
+.modal h2{font-size:16px;font-weight:800;margin-bottom:16px}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.mbtns button{flex:1;padding:12px;font-size:14px;font-weight:700;border:none;border-radius:9px}
+.btn-cancel{background:#334155;color:#94A3B8}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#334155;color:#F8FAFC;padding:10px 22px;border-radius:99px;font-size:14px;font-weight:700;z-index:200;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div id="config-screen">
+  <div class="cfg-logo">👨‍🍳</div>
+  <div class="cfg-title">Mise en Place</div>
+  <div class="cfg-sub">Cuisine & Service — en temps réel</div>
+  <div class="card">
+    <div class="card-top"><span>1. SQL Supabase</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn-xs" onclick="toggleSQL()">Voir</button>
+        <button class="btn-xs" onclick="copySQL()">📋 Copier</button>
+      </div>
+    </div>
+    <div id="sql-block" style="display:none">
+      <pre class="sql-pre" id="sql-text">-- TABLE PORTIONS (si pas déjà créée)
+drop table if exists mise_en_place;
+create table mise_en_place (
+  id uuid default gen_random_uuid() primary key,
+  section text not null, sous_section text,
+  nom text not null, portions int not null default 0,
+  rupture boolean not null default false,
+  actif boolean not null default true,
+  ordre int not null default 0,
+  created_at timestamptz default now()
+);
+alter table mise_en_place enable row level security;
+create policy "pub1" on mise_en_place for all to anon using (true) with check (true);
+
+-- TABLE MISE EN PLACE COMPOSANTS
+drop table if exists prep;
+create table prep (
+  id uuid default gen_random_uuid() primary key,
+  section text not null, sous_section text,
+  plat text not null, composant text not null,
+  fait boolean not null default false,
+  ordre int not null default 0
+);
+alter table prep enable row level security;
+create policy "pub2" on prep for all to anon using (true) with check (true);</pre>
+    </div>
+    <p style="font-size:13px;color:#475569;margin-top:8px">Supabase → SQL Editor → exécuter</p>
+  </div>
+  <div class="card">
+    <div class="card-top"><span>2. Connexion</span></div>
+    <label class="lbl">Project URL</label>
+    <input id="inp-url" placeholder="https://xxx.supabase.co" />
+    <label class="lbl">Clé publiable</label>
+    <input id="inp-key" placeholder="sb_publiable_..." />
+    <div id="conn-err" class="cfg-err" style="display:none"></div>
+    <button class="btn-primary" id="btn-connect" onclick="connect()">Se connecter</button>
+  </div>
+  <p class="cfg-hint">Supabase → Settings → Clés API → Clé publiable</p>
+</div>
+
+<div id="app">
+  <header>
+    <h1>👨‍🍳 Mise en Place</h1>
+    <div class="hbtns">
+      <button class="hbtn" id="btn-mep"     onclick="setView('mep')">📋 Mise en Place</button>
+      <button class="hbtn" id="btn-cuisine" onclick="setView('cuisine')">🍳 Cuisine</button>
+      <button class="hbtn" id="btn-service" onclick="setView('service')">🍽️ Service</button>
+      <button class="hbtn" onclick="openReset()">🔄</button>
+      <button class="hbtn" onclick="disconnect()">⚙️</button>
+    </div>
+  </header>
+  <div id="main"></div>
+  <button id="fab" onclick="openAdd()">+</button>
+</div>
+
+<div id="overlay">
+  <div class="modal">
+    <h2 id="modal-title"></h2>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const MENU=[
+  {section:'tapas',ss:null,nom:'Le Poulet Croustillant',ordre:1},
+  {section:'tapas',ss:null,nom:'Le Bœuf',ordre:2},
+  {section:'tapas',ss:null,nom:'Les Camarons',ordre:3},
+  {section:'tapas',ss:null,nom:'Le Ceviche',ordre:4},
+  {section:'tapas',ss:null,nom:'Le Végé',ordre:5},
+  {section:'tapas',ss:null,nom:'La Planche Apoteek Vibes',ordre:6},
+  {section:'tapas',ss:null,nom:'La Planche Charcuterie',ordre:7},
+  {section:'tapas',ss:null,nom:'Fromage du Moment',ordre:8},
+  {section:'tapas',ss:null,nom:'Le Camembert Rôti',ordre:9},
+  {section:'plats',ss:'Côté Terre',nom:'Côte de Bœuf, Beurre Façon Béarnaise Caloupilé',ordre:1},
+  {section:'plats',ss:'Côté Terre',nom:'Pluma Ibérique, Chimichurry Pél Éclats de Noisettes',ordre:2},
+  {section:'plats',ss:'Côté Terre',nom:"Magret de Canard Laqué au Miel d'Épices",ordre:3},
+  {section:'plats',ss:'Côté Mer',nom:'Filet de Légine en Croûte de Combava et Curcuma Confit',ordre:4},
+  {section:'plats',ss:'Côté Mer',nom:'Gros Camarons Flambés au Saké, Pickles de Carottes',ordre:5},
+  {section:'plats',ss:'Côté Mer',nom:'Zourites Grillés, Rougail Arbuste',ordre:6},
+  {section:'plats',ss:'Côté Végé',nom:'Plat du Moment',ordre:7},
+  {section:'desserts',ss:null,nom:'Brioche Perdue, Glace Caramel Beurre Salé',ordre:1},
+  {section:'desserts',ss:null,nom:'Crème Brûlée du Moment',ordre:2},
+  {section:'desserts',ss:null,nom:'Fondant au Chocolat, Glace Vanille et Crème Anglaise',ordre:3},
+  {section:'desserts',ss:null,nom:'Café Gourmand',ordre:4},
+  {section:'desserts',ss:null,nom:'Dessert du Jour',ordre:5},
+];
+
+const PREP_SEED=[
+  // TAPAS
+  {section:'tapas',ss:null,plat:'Le Poulet Croustillant',composant:'POULET MARINÉ',ordre:1},
+  {section:'tapas',ss:null,plat:'Le Poulet Croustillant',composant:'PANURE',ordre:2},
+  {section:'tapas',ss:null,plat:'Le Poulet Croustillant',composant:'SAUCE MAISON',ordre:3},
+  {section:'tapas',ss:null,plat:'Le Bœuf',composant:'BŒUF TAILLÉ',ordre:1},
+  {section:'tapas',ss:null,plat:'Le Bœuf',composant:'MARINADE',ordre:2},
+  {section:'tapas',ss:null,plat:'Le Bœuf',composant:'SAUCE',ordre:3},
+  {section:'tapas',ss:null,plat:'Les Camarons',composant:'CAMARONS DÉCORTIQUÉS',ordre:1},
+  {section:'tapas',ss:null,plat:'Les Camarons',composant:'SAUCE',ordre:2},
+  {section:'tapas',ss:null,plat:'Les Camarons',composant:'GARNITURE',ordre:3},
+  {section:'tapas',ss:null,plat:'Le Ceviche',composant:'POISSON TAILLÉ',ordre:1},
+  {section:'tapas',ss:null,plat:'Le Ceviche',composant:'MARINADE CITRON',ordre:2},
+  {section:'tapas',ss:null,plat:'Le Ceviche',composant:'OIGNON ROUGE',ordre:3},
+  {section:'tapas',ss:null,plat:'Le Ceviche',composant:'CORIANDRE',ordre:4},
+  {section:'tapas',ss:null,plat:'Le Végé',composant:'LÉGUMES TAILLÉS',ordre:1},
+  {section:'tapas',ss:null,plat:'Le Végé',composant:'SAUCE VÉGÉ',ordre:2},
+  {section:'tapas',ss:null,plat:'Le Végé',composant:'ACCOMPAGNEMENT',ordre:3},
+  {section:'tapas',ss:null,plat:'La Planche Apoteek Vibes',composant:'CHARCUTERIE DRESSÉE',ordre:1},
+  {section:'tapas',ss:null,plat:'La Planche Apoteek Vibes',composant:'FROMAGES',ordre:2},
+  {section:'tapas',ss:null,plat:'La Planche Apoteek Vibes',composant:'CONDIMENTS',ordre:3},
+  {section:'tapas',ss:null,plat:'La Planche Apoteek Vibes',composant:'PAIN',ordre:4},
+  {section:'tapas',ss:null,plat:'La Planche Charcuterie',composant:'CHARCUTERIE TRANCHÉE',ordre:1},
+  {section:'tapas',ss:null,plat:'La Planche Charcuterie',composant:'CORNICHONS',ordre:2},
+  {section:'tapas',ss:null,plat:'La Planche Charcuterie',composant:'MOUTARDE',ordre:3},
+  {section:'tapas',ss:null,plat:'La Planche Charcuterie',composant:'PAIN',ordre:4},
+  {section:'tapas',ss:null,plat:'Fromage du Moment',composant:'FROMAGE',ordre:1},
+  {section:'tapas',ss:null,plat:'Fromage du Moment',composant:'CONFITURE',ordre:2},
+  {section:'tapas',ss:null,plat:'Fromage du Moment',composant:'PAIN GRILLÉ',ordre:3},
+  {section:'tapas',ss:null,plat:'Le Camembert Rôti',composant:'CAMEMBERT',ordre:1},
+  {section:'tapas',ss:null,plat:'Le Camembert Rôti',composant:'MIEL',ordre:2},
+  {section:'tapas',ss:null,plat:'Le Camembert Rôti',composant:'NOIX',ordre:3},
+  {section:'tapas',ss:null,plat:'Le Camembert Rôti',composant:'PAIN',ordre:4},
+  // PLATS TERRE
+  {section:'plats',ss:'Côté Terre',plat:'Côte de Bœuf, Beurre Façon Béarnaise Caloupilé',composant:'CÔTE DE BŒUF',ordre:1},
+  {section:'plats',ss:'Côté Terre',plat:'Côte de Bœuf, Beurre Façon Béarnaise Caloupilé',composant:'BEURRE BÉARNAISE',ordre:2},
+  {section:'plats',ss:'Côté Terre',plat:'Côte de Bœuf, Beurre Façon Béarnaise Caloupilé',composant:'CALOUPILÉ',ordre:3},
+  {section:'plats',ss:'Côté Terre',plat:'Pluma Ibérique, Chimichurry Pél Éclats de Noisettes',composant:'PLUMA IBÉRIQUE',ordre:1},
+  {section:'plats',ss:'Côté Terre',plat:'Pluma Ibérique, Chimichurry Pél Éclats de Noisettes',composant:'CHIMICHURRY PÉL',ordre:2},
+  {section:'plats',ss:'Côté Terre',plat:'Pluma Ibérique, Chimichurry Pél Éclats de Noisettes',composant:'ÉCLATS DE NOISETTES',ordre:3},
+  {section:'plats',ss:'Côté Terre',plat:"Magret de Canard Laqué au Miel d'Épices",composant:'MAGRET DE CANARD',ordre:1},
+  {section:'plats',ss:'Côté Terre',plat:"Magret de Canard Laqué au Miel d'Épices",composant:'LAQUE AU MIEL',ordre:2},
+  {section:'plats',ss:'Côté Terre',plat:"Magret de Canard Laqué au Miel d'Épices",composant:"MÉLANGE D'ÉPICES",ordre:3},
+  // PLATS MER
+  {section:'plats',ss:'Côté Mer',plat:'Filet de Légine en Croûte de Combava et Curcuma Confit',composant:'LÉGINE',ordre:1},
+  {section:'plats',ss:'Côté Mer',plat:'Filet de Légine en Croûte de Combava et Curcuma Confit',composant:'CROÛTE COMBAVA',ordre:2},
+  {section:'plats',ss:'Côté Mer',plat:'Filet de Légine en Croûte de Combava et Curcuma Confit',composant:'CURCUMA CONFIT',ordre:3},
+  {section:'plats',ss:'Côté Mer',plat:'Gros Camarons Flambés au Saké, Pickles de Carottes',composant:'CAMARONS',ordre:1},
+  {section:'plats',ss:'Côté Mer',plat:'Gros Camarons Flambés au Saké, Pickles de Carottes',composant:'SAKÉ FLAMBAGE',ordre:2},
+  {section:'plats',ss:'Côté Mer',plat:'Gros Camarons Flambés au Saké, Pickles de Carottes',composant:'PICKLES CAROTTES',ordre:3},
+  {section:'plats',ss:'Côté Mer',plat:'Gros Camarons Flambés au Saké, Pickles de Carottes',composant:'OIGNON',ordre:4},
+  {section:'plats',ss:'Côté Mer',plat:'Gros Camarons Flambés au Saké, Pickles de Carottes',composant:'GROS PIMENT',ordre:5},
+  {section:'plats',ss:'Côté Mer',plat:'Zourites Grillés, Rougail Arbuste',composant:'ZOURITES',ordre:1},
+  {section:'plats',ss:'Côté Mer',plat:'Zourites Grillés, Rougail Arbuste',composant:'ROUGAIL ARBUSTE',ordre:2},
+  // PLATS VEGE
+  {section:'plats',ss:'Côté Végé',plat:'Plat du Moment',composant:'À DÉFINIR',ordre:1},
+  // DESSERTS
+  {section:'desserts',ss:null,plat:'Brioche Perdue, Glace Caramel Beurre Salé',composant:'BRIOCHE PERDUE',ordre:1},
+  {section:'desserts',ss:null,plat:'Brioche Perdue, Glace Caramel Beurre Salé',composant:'GLACE CARAMEL',ordre:2},
+  {section:'desserts',ss:null,plat:'Brioche Perdue, Glace Caramel Beurre Salé',composant:'BEURRE SALÉ',ordre:3},
+  {section:'desserts',ss:null,plat:'Crème Brûlée du Moment',composant:'BASE CRÈME BRÛLÉE',ordre:1},
+  {section:'desserts',ss:null,plat:'Crème Brûlée du Moment',composant:'CASSONADE',ordre:2},
+  {section:'desserts',ss:null,plat:'Crème Brûlée du Moment',composant:'GARNITURE',ordre:3},
+  {section:'desserts',ss:null,plat:'Fondant au Chocolat, Glace Vanille et Crème Anglaise',composant:'FONDANT CHOCOLAT',ordre:1},
+  {section:'desserts',ss:null,plat:'Fondant au Chocolat, Glace Vanille et Crème Anglaise',composant:'GLACE VANILLE',ordre:2},
+  {section:'desserts',ss:null,plat:'Fondant au Chocolat, Glace Vanille et Crème Anglaise',composant:'CRÈME ANGLAISE',ordre:3},
+  {section:'desserts',ss:null,plat:'Café Gourmand',composant:'CAFÉ',ordre:1},
+  {section:'desserts',ss:null,plat:'Café Gourmand',composant:'MIGNARDISES',ordre:2},
+  {section:'desserts',ss:null,plat:'Dessert du Jour',composant:'À DÉFINIR',ordre:1},
+];
+
+const SECS=[
+  {id:'tapas',   l:'Tapas',   e:'🍢',c:'#D85A30',t:'#4A1B0C'},
+  {id:'plats',   l:'Plats',   e:'🍽️',c:'#BA7517',t:'#412402'},
+  {id:'desserts',l:'Desserts',e:'🍰',c:'#D4537E',t:'#4B1528'},
+];
+
+let cfg=null,items=[],preps=[],view='mep',pollTimer=null,addSec='tapas',expanded={};
+
+window.onload=()=>{
+  const s=localStorage.getItem('mep5_cfg');
+  if(s){cfg=JSON.parse(s);showApp();}
+  document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal();});
+};
+
+function toggleSQL(){const e=document.getElementById('sql-block');e.style.display=e.style.display==='none'?'block':'none';}
+function copySQL(){navigator.clipboard.writeText(document.getElementById('sql-text').textContent.trim()).then(()=>toast('SQL copié !'));}
+
+async function connect(){
+  const url=document.getElementById('inp-url').value.trim();
+  const key=document.getElementById('inp-key').value.trim();
+  const errEl=document.getElementById('conn-err');
+  const btn=document.getElementById('btn-connect');
+  if(!url||!key){errEl.textContent='Remplir les deux champs.';errEl.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Connexion...';
+  try{
+    const r=await fetch(`${url}/rest/v1/mise_en_place?limit=1`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
+    if(!r.ok){const txt=await r.text();errEl.textContent=txt.toLowerCase().includes('exist')?'Table introuvable — exécuter le SQL d\'abord.':'Erreur. Vérifier URL et clé.';errEl.style.display='block';btn.disabled=false;btn.textContent='Se connecter';return;}
+    cfg={url,key};localStorage.setItem('mep5_cfg',JSON.stringify(cfg));
+    errEl.style.display='none';
+    await seedMenu();await seedPrep();
+    showApp();
+  }catch{errEl.textContent='Impossible de se connecter.';errEl.style.display='block';btn.disabled=false;btn.textContent='Se connecter';}
+}
+
+async function seedMenu(){
+  const r=await api('mise_en_place?limit=1');if(!r?.ok)return;
+  const d=await r.json();if(d.length>0)return;
+  for(const it of MENU)await api('mise_en_place',{method:'POST',body:JSON.stringify({section:it.section,sous_section:it.ss,nom:it.nom,portions:0,rupture:false,actif:true,ordre:it.ordre})});
+}
+async function seedPrep(){
+  const r=await api('prep?limit=1');if(!r?.ok)return;
+  const d=await r.json();if(d.length>0)return;
+  for(const it of PREP_SEED)await api('prep',{method:'POST',body:JSON.stringify({section:it.section,sous_section:it.ss,plat:it.plat,composant:it.composant,fait:false,ordre:it.ordre})});
+}
+
+function disconnect(){clearInterval(pollTimer);cfg=null;localStorage.removeItem('mep5_cfg');document.getElementById('app').classList.remove('active');document.getElementById('config-screen').style.display='block';document.getElementById('btn-connect').disabled=false;document.getElementById('btn-connect').textContent='Se connecter';}
+
+function showApp(){
+  document.getElementById('config-screen').style.display='none';
+  document.getElementById('app').classList.add('active');
+  setView('mep');loadAll();
+  clearInterval(pollTimer);pollTimer=setInterval(loadAll,7000);
+}
+
+async function api(path,opts={}){
+  return fetch(`${cfg.url}/rest/v1/${path}`,{...opts,headers:{apikey:cfg.key,Authorization:`Bearer ${cfg.key}`,'Content-Type':'application/json','Prefer':'return=minimal',...(opts.headers||{})}});
+}
+
+async function loadAll(){
+  try{
+    const[r1,r2]=await Promise.all([
+      api('mise_en_place?actif=eq.true&order=section.asc,ordre.asc'),
+      api('prep?order=section.asc,ordre.asc')
+    ]);
+    if(r1?.ok)items=await r1.json();
+    if(r2?.ok)preps=await r2.json();
+    render();
+  }catch{}
+}
+
+function setView(v){
+  view=v;
+  ['mep','cuisine','service'].forEach(x=>{document.getElementById('btn-'+x).classList.toggle('on',x===v);});
+  document.getElementById('fab').style.display=v==='cuisine'?'flex':'none';
+  render();
+}
+
+function render(){
+  if(view==='mep')renderMEP();
+  else if(view==='cuisine')renderCuisine();
+  else renderService();
+}
+
+// ── MEP VIEW ──
+function renderMEP(){
+  let html='';
+  SECS.forEach(s=>{
+    const sPreps=preps.filter(p=>p.section===s.id);
+    const plats=[...new Set(sPreps.map(p=>p.plat))];
+    const totalComp=sPreps.length;
+    const doneComp=sPreps.filter(p=>p.fait).length;
+    html+=`<div class="mep-sec-hdr"><h2 style="color:${s.c}">${s.e} ${s.l}</h2><span class="sec-badge">${doneComp}/${totalComp}</span></div>`;
+
+    if(s.id==='plats'){
+      ['Côté Terre','Côté Mer','Côté Végé'].forEach(ss=>{
+        const ssPlats=plats.filter(pl=>sPreps.find(p=>p.plat===pl&&p.sous_section===ss));
+        if(!ssPlats.length)return;
+        html+=`<div class="mep-ss-lbl">${ss}</div>`;
+        ssPlats.forEach(pl=>{html+=platBlock(pl,sPreps,s.c);});
+      });
+    } else {
+      plats.forEach(pl=>{html+=platBlock(pl,sPreps,s.c);});
+    }
+  });
+  document.getElementById('main').innerHTML=html;
+}
+
+function platBlock(plat,sPreps,color){
+  const comps=sPreps.filter(p=>p.plat===plat);
+  const done=comps.filter(p=>p.fait).length;
+  const total=comps.length;
+  const allDone=done===total;
+  const pCls=allDone?'plat-done':done>0?'plat-partial':'plat-todo';
+  const isOpen=expanded[plat]!==false;
+  let html=`<div class="plat-block" style="border-left:3px solid ${allDone?'#22C55E':color}">
+    <div class="plat-hdr" onclick="togglePlat('${esc(plat)}')">
+      <div class="plat-hdr-left">
+        <div style="font-size:16px">${allDone?'✅':'⬜'}</div>
+        <div class="plat-hdr-name">${esc(plat)}</div>
+      </div>
+      <span class="plat-progress ${pCls}">${done}/${total}</span>
+    </div>`;
+  if(isOpen){
+    html+=`<div class="composant-list">`;
+    comps.forEach(c=>{
+      html+=`<div class="composant-row${c.fait?' fait':''}" onclick="toggleComp('${c.id}',${c.fait})">
+        <div class="comp-check${c.fait?' on':''}">✓</div>
+        <div class="comp-name${c.fait?' fait':''}">${esc(c.composant)}</div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function togglePlat(plat){
+  expanded[plat]=expanded[plat]===false?true:false;
+  render();
+}
+
+async function toggleComp(id,cur){
+  const p=preps.find(x=>x.id===id);if(!p)return;
+  p.fait=!cur;render();
+  await api(`prep?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({fait:!cur})});
+}
+
+// ── CUISINE VIEW ──
+function renderCuisine(){
+  let html='';
+  SECS.forEach(s=>{
+    const si=items.filter(i=>i.section===s.id);
+    const dispo=si.filter(i=>i.portions>0&&!i.rupture).length;
+    html+=`<div><div class="sec-hdr"><h2 style="color:${s.c}">${s.e} ${s.l}</h2><div style="display:flex;align-items:center;gap:8px"><span class="sec-badge">${dispo}/${si.length}</span><button class="btn-add-sec" onclick="openAddSec('${s.id}')">+</button></div></div>`;
+    if(s.id==='plats'){
+      ['Côté Terre','Côté Mer','Côté Végé'].forEach(ss=>{
+        const ssi=si.filter(i=>i.sous_section===ss);if(!ssi.length)return;
+        html+=`<div class="ss-lbl">${ss}</div>`;
+        ssi.forEach(i=>html+=itemRow(i,s.c));
+      });
+      si.filter(i=>!i.sous_section).forEach(i=>html+=itemRow(i,s.c));
+    } else {si.forEach(i=>html+=itemRow(i,s.c));}
+    html+='</div>';
+  });
+  document.getElementById('main').innerHTML=html;
+  document.getElementById('fab').style.background=SECS[0].c;
+}
+
+function itemRow(it,color){
+  return `<div class="item-row" style="border-left:3px solid ${it.rupture?'#334155':color}">
+    <div class="item-info"><div class="item-nom">${esc(it.nom)}</div>${it.rupture?'<div class="item-sub-txt">RUPTURE</div>':''}</div>
+    <div class="ctrl">
+      <button class="btn-m" onclick="chg('${it.id}',-1)">−</button>
+      <div class="qty ${it.portions===0?'zero':''}">${it.portions}</div>
+      <button class="btn-p" onclick="chg('${it.id}',1)">+</button>
+    </div>
+    <button class="btn-rupt" onclick="toggleRupt('${it.id}',${it.rupture})">${it.rupture?'🔴':'🟢'}</button>
+    <button class="btn-del" onclick="delItem('${it.id}')">🗑</button>
+  </div>`;
+}
+
+// ── SERVICE VIEW ──
+function renderService(){
+  let html='';
+  SECS.forEach(s=>{
+    const si=items.filter(i=>i.section===s.id);if(!si.length)return;
+    html+=`<div class="srv-sec-title" style="color:${s.c}">${s.e} ${s.l}</div><div class="srv-grid">`;
+    si.forEach(i=>{
+      const p=i.portions,out=i.rupture||p===0,peu=!out&&p<=2,ok=!out&&p>2;
+      const cls=out?'out':peu?'peu':'dispo';
+      const qcls=out?'gray':peu?'amber':'green';
+      const label=i.rupture?'RUPTURE':p===0?'ÉPUISÉ':peu?'BIENTÔT FINI':'DISPONIBLE';
+      html+=`<div class="srv-card ${cls}"><div class="srv-name">${esc(i.nom)}</div><div class="srv-qty ${qcls}">${p}</div><div class="srv-status ${qcls}">${label}</div>${!out?`<button class="srv-minus" onclick="chg('${i.id}',-1)">−</button>`:''}</div>`;
+    });
+    html+='</div><div style="height:16px"></div>';
+  });
+  document.getElementById('main').innerHTML=html;
+}
+
+// ── ACTIONS ──
+async function chg(id,delta){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  const nv=Math.max(0,it.portions+delta);it.portions=nv;render();
+  await api(`mise_en_place?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({portions:nv})});
+}
+async function toggleRupt(id,cur){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  it.rupture=!cur;render();
+  await api(`mise_en_place?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({rupture:!cur})});
+}
+async function delItem(id){items=items.filter(i=>i.id!==id);render();await api(`mise_en_place?id=eq.${id}`,{method:'DELETE'});}
+
+// ── ADD ──
+function openAdd(){openAddSec('tapas');}
+function openAddSec(sec){
+  addSec=sec;const s=SECS.find(x=>x.id===sec);
+  document.getElementById('overlay').classList.add('on');
+  document.getElementById('modal-title').textContent=`Ajouter — ${s.e} ${s.l}`;
+  const ssOpts=sec==='plats'?`<label style="font-size:13px;color:#94A3B8;display:block;margin:12px 0 5px">Sous-section</label><select id="m-ss"><option value="">Aucune</option><option>Côté Terre</option><option>Côté Mer</option><option>Côté Végé</option></select>`:'';
+  document.getElementById('modal-body').innerHTML=`<label style="font-size:13px;color:#94A3B8;display:block;margin-bottom:5px">Nom du plat</label><input id="m-nom" placeholder="ex: Le Poulet Croustillant" />${ssOpts}<div class="mbtns"><button class="btn-cancel" onclick="closeModal()">Annuler</button><button style="background:${s.c};color:${s.t}" onclick="submitAdd()">Ajouter</button></div>`;
+  setTimeout(()=>{const i=document.getElementById('m-nom');if(i){i.focus();i.addEventListener('keydown',e=>{if(e.key==='Enter')submitAdd();});}},60);
+}
+async function submitAdd(){
+  const nom=document.getElementById('m-nom').value.trim();if(!nom)return;
+  const ssEl=document.getElementById('m-ss');const ss=ssEl?ssEl.value||null:null;
+  const maxO=items.filter(i=>i.section===addSec).reduce((m,i)=>Math.max(m,i.ordre),0);
+  closeModal();
+  await api('mise_en_place',{method:'POST',body:JSON.stringify({section:addSec,sous_section:ss,nom,portions:0,rupture:false,actif:true,ordre:maxO+1})});
+  await loadAll();
+}
+
+// ── RESET ──
+function openReset(){
+  document.getElementById('overlay').classList.add('on');
+  document.getElementById('modal-title').textContent='Reset 🔄';
+  document.getElementById('modal-body').innerHTML=`
+    <p style="color:#94A3B8;font-size:14px;margin-bottom:6px">Choisir ce qu'on remet à zéro :</p>
+    <div class="mbtns" style="flex-direction:column">
+      <button style="background:#F59E0B;color:#412402" onclick="resetPortions()">🍳 Portions → 0 (nouveau service)</button>
+      <button style="background:#7F77DD;color:#26215C" onclick="resetPrep()">📋 Mise en place → tout décocher</button>
+      <button style="background:#EF4444;color:#4A1B0C" onclick="resetAll()">💥 Tout remettre à zéro</button>
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+    </div>`;
+}
+async function resetPortions(){closeModal();await api('mise_en_place',{method:'PATCH',body:JSON.stringify({portions:0,rupture:false})});await loadAll();toast('Portions remises à 0 ✓');}
+async function resetPrep(){closeModal();await api('prep',{method:'PATCH',body:JSON.stringify({fait:false})});await loadAll();toast('Mise en place remise à zéro ✓');}
+async function resetAll(){closeModal();await Promise.all([api('mise_en_place',{method:'PATCH',body:JSON.stringify({portions:0,rupture:false})}),api('prep',{method:'PATCH',body:JSON.stringify({fait:false})})]);await loadAll();toast('Tout remis à zéro ✓');}
+
+function closeModal(){document.getElementById('overlay').classList.remove('on');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+</script>
+</body>
+</html>
